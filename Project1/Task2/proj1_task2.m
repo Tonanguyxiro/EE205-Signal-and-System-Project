@@ -21,8 +21,8 @@ hold on
 
 for i = 1:length(lpf)
     yn = tone_vocoder(N, Freq_low, Freq_high, Freq_sample, lpf(i), sample);
-    yn = fftshift(fft(yn));
-    yn_abs = abs(yn);
+    yn_shift = fftshift(fft(yn));
+    yn_abs = abs(yn_shift);
 
     %plot yn_abs
     subplot(4, 1, i);
@@ -31,7 +31,7 @@ for i = 1:length(lpf)
     title(sprintf('Tone Vocoder:N = 4, f_{lpf}=%d Hz',lpf(i)))
 
     xlabel('Frequency(Hz)');ylabel('Magnitude');
-    audiowrite(sprintf('task2_N=4_lpf=%d.wav',lpf(i)),real(yn),Freq_sample);
+    audiowrite(sprintf('task2_N=4_lpf=%d.wav',lpf(i)),abs(yn),Freq_sample);
     
 
     grid on
