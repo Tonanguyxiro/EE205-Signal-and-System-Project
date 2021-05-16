@@ -8,17 +8,37 @@ function yn = tone_vocoder(N, Freq_low, Freq_high, Freq_sample, Freq_filter, sam
         band = [Freq_cochlea(band_index) Freq_cochlea(band_index+1)]
 
         % Design band-pass filter at band i
-        [a1, b1] = butter(2, band/(Freq_sample/2));
+        [b1, a1] = butter(2, band/(Freq_sample/2));
         
         % Do band-pass filtering at band i
-        sample_band = filter(a1, b1, sample);
+        sample_band = filter(b1, a1, sample);
         sample_band = abs(sample_band);
-        % freqz(a1, b1)
+
+        figure1 = figure;
+        sample_band_fft = fftshift(fft(sample_band));
+        sample_band_fft_abs = abs(sample_band_fft);
+        subplot(2, 1, 1);
+        xn = linspace(-Freq_sample/2, Freq_sample/2, length(sample))
+        plot(xn, sample_band_fft_abs);
+        title(sprintf('sample band: %d-%d lpf=%d', band(1), band(2), Freq_filter))
+        xlabel('Frequency(Hz)');ylabel('Magnitude');
+        
+        % freqz(b1, a1)
         % Do full-wave rectification
         % apply low-pass filtering to get the envelope at band i
-        [a2, b2] = butter(4, Freq_filter/(Freq_sample/2), 'low');
+        [b2, a2] = butter(4, Freq_filter/(Freq_sample/2), 'low');
         
-        filtered_sample_band = filter(a2, b2, sample_band);
+        filtered_sample_band = filter(b2, a2, sample_band);
+
+        filtered_sample_band_fft = fftshift(fft(filtered_sample_band));
+        filtered_sample_band_fft_abs = abs(filtered_sample_band_fft);
+        subplot(2, 1, 2);
+        plot(xn, filtered_sample_band_fft_abs);
+        title(sprintf('filtered sample band: %d-%d lpf=%d', round(band(1)), round(band(2)), Freq_filter));
+        xlabel('Frequency(Hz)');ylabel('Magnitude');
+        saveas(figure1, sprintf('plots/sample_band_%d-%d_lpf=%d.png', round(band(1)), round(band(2)), Freq_filter));
+        close;
+
         % freqz(a2, b2);
         % Generate a sinewave, whose frequency equals to the center frequency of the i-th bandpass filter
         fm = (band(1)+band(2))/2;
@@ -26,11 +46,13 @@ function yn = tone_vocoder(N, Freq_low, Freq_high, Freq_sample, Freq_filter, sam
         sin_wave = sin(2*pi*fm*xn/Freq_sample);
         
         % Multiply the envelope signal and sinewave
-        yn = yn + sin_wave .* filtered_sample_band
+        product = sin_wave .* filtered_sample_band;
+        product = product / norm(product)*norm(sample)
+        yn = yn + product;
        
     end
 
     yn = yn/norm(yn)*norm(sample);
     yn = yn.';
 
-end
+   
