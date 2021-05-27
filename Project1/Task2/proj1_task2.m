@@ -12,7 +12,8 @@ sample = sample.';
 figure;
 sample_fft = fftshift(fft(sample));
 sample_fft_abs = abs(sample_fft);
-plot(sample_fft_abs)
+xn = linspace(-Freq_sample/2, Freq_sample/2, length(sample))
+plot(xn, sample_fft_abs)
 title('sample in frequency domain');
 xlabel('Frequency(Hz)');ylabel('Magnitude');
 saveas(gcf, 'plots/sample.png');
